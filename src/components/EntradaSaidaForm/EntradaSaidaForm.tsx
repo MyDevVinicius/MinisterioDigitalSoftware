@@ -1,10 +1,9 @@
-// src/components/EntradaSaidaForm.tsx
 import React, { useState, useEffect, FormEvent } from "react";
 import styled from "styled-components";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Definindo a tipagem da entrada/saída
+// Tipagem da entrada/saída
 interface EntradaSaida {
   observacao: string;
   tipoTransacao: "Entrada" | "Saida"; // Tipo de transação
@@ -91,10 +90,8 @@ const EntradaSaidaForm: React.FC = () => {
   });
 
   const [membros, setMembros] = useState<Membro[]>([]);
-  const [isMembro, setIsMembro] = useState<boolean>(true);
 
   useEffect(() => {
-    // Função para buscar os membros da API
     const fetchMembros = async () => {
       try {
         const nomeBanco = localStorage.getItem("nome_banco");
@@ -124,11 +121,10 @@ const EntradaSaidaForm: React.FC = () => {
       }
     };
 
-    // Carrega os membros quando o tipo de transação for "Entrada"
     if (formData.tipoTransacao === "Entrada") {
       fetchMembros();
     }
-  }, [formData.tipoTransacao]); // Dependência para carregar quando o tipo de transação mudar
+  }, [formData.tipoTransacao]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -138,10 +134,6 @@ const EntradaSaidaForm: React.FC = () => {
       ...prevState,
       [name]: value,
     }));
-
-    if (name === "tipoTransacao") {
-      setIsMembro(value === "Entrada");
-    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -156,20 +148,20 @@ const EntradaSaidaForm: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/entradasaida?banco=${nomeBanco}`, {
+      const response = await fetch("/api/entradasaida", {
         method: "POST",
-        body: JSON.stringify(formData),
         headers: {
           "Content-Type": "application/json",
-          "x-verificacao-chave": chaveVerificacao, // Enviando a chave de verificação
-          "x-nome-banco": nomeBanco, // Enviando o nome do banco
+          "x-verificacao-chave": chaveVerificacao,
+          "x-nome-banco": nomeBanco,
         },
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success("Entrada/Saída registrada com sucesso!");
+        toast.success(data.message);
         setFormData({
           observacao: "",
           tipoTransacao: "Entrada",
@@ -179,108 +171,86 @@ const EntradaSaidaForm: React.FC = () => {
           dataTransacao: new Date().toISOString().slice(0, 19),
         });
       } else {
-        toast.error(data.message || "Erro ao registrar entrada/saída.");
+        toast.error(data.message || "Erro ao registrar transação.");
       }
     } catch (error) {
-      toast.error("Erro ao registrar entrada/saída.");
+      toast.error("Erro ao enviar dados.");
     }
   };
 
   return (
     <Container>
-      <h2>Adicionar Entrada/Saída</h2>
+      <h2>Registrar Entrada/Saída</h2>
       <Form onSubmit={handleSubmit}>
-        <div>
-          <Label htmlFor="observacao">Observação:</Label>
-          <Input
-            type="text"
-            id="observacao"
-            name="observacao"
-            value={formData.observacao}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="tipoTransacao">Tipo de Transação:</Label>
-          <Select
-            id="tipoTransacao"
-            name="tipoTransacao"
-            value={formData.tipoTransacao}
-            onChange={handleChange}
-          >
-            <option value="Entrada">Entrada</option>
-            <option value="Saida">Saída</option>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="tipo">Tipo:</Label>
-          <Select
-            id="tipo"
-            name="tipo"
-            value={formData.tipo}
-            onChange={handleChange}
-            disabled={formData.tipoTransacao === "Saida"}
-          >
-            <option value="Dizimo">Dizimo</option>
-            <option value="Oferta">Oferta</option>
-            <option value="Doacao">Doacao</option>
-            <option value="Campanha">Campanha</option>
-            <option value="Pagamento">Pagamento</option>
-            <option value="Salario">Salario</option>
-            <option value="Ajuda de Custo">Ajuda de Custo</option>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="valor">Valor:</Label>
-          <Input
-            type="number"
-            id="valor"
-            name="valor"
-            value={formData.valor}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="formaPagamento">Forma de Pagamento:</Label>
-          <Select
-            id="formaPagamento"
-            name="formaPagamento"
-            value={formData.formaPagamento}
-            onChange={handleChange}
-          >
-            <option value="Dinheiro">Dinheiro</option>
-            <option value="PIX">PIX</option>
-            <option value="Debito">Débito</option>
-            <option value="Credito">Crédito</option>
-          </Select>
-        </div>
-
-        {isMembro && (
-          <div>
-            <Label htmlFor="membroId">Membro:</Label>
+        <Label>Observação</Label>
+        <Input
+          type="text"
+          name="observacao"
+          value={formData.observacao}
+          onChange={handleChange}
+        />
+        <Label>Tipo de Transação</Label>
+        <Select
+          name="tipoTransacao"
+          value={formData.tipoTransacao}
+          onChange={handleChange}
+        >
+          <option value="Entrada">Entrada</option>
+          <option value="Saida">Saída</option>
+        </Select>
+        <Label>Tipo</Label>
+        <Select name="tipo" value={formData.tipo} onChange={handleChange}>
+          <option value="Dizimo">Dízimo</option>
+          <option value="Oferta">Oferta</option>
+          <option value="Doacao">Doação</option>
+          <option value="Campanha">Campanha</option>
+          <option value="Pagamento">Pagamento</option>
+          <option value="Salario">Salário</option>
+          <option value="Ajuda de Custo">Ajuda de Custo</option>
+        </Select>
+        {formData.tipoTransacao === "Entrada" && formData.tipo === "Dizimo" && (
+          <>
+            <Label>Membro</Label>
             <Select
-              id="membroId"
               name="membroId"
               value={formData.membroId || ""}
               onChange={handleChange}
             >
-              <option value="">Selecione o membro</option>
+              <option value="">Selecione um Membro</option>
               {membros.map((membro) => (
                 <option key={membro.id} value={membro.id}>
                   {membro.nome}
                 </option>
               ))}
             </Select>
-          </div>
+          </>
         )}
-
-        <Button type="submit">Registrar</Button>
+        <Label>Forma de Pagamento</Label>
+        <Select
+          name="formaPagamento"
+          value={formData.formaPagamento}
+          onChange={handleChange}
+        >
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="PIX">PIX</option>
+          <option value="Debito">Débito</option>
+          <option value="Credito">Crédito</option>
+        </Select>
+        <Label>Valor</Label>
+        <Input
+          type="number"
+          name="valor"
+          value={formData.valor}
+          onChange={handleChange}
+        />
+        <Label>Data da Transação</Label>
+        <Input
+          type="datetime-local"
+          name="dataTransacao"
+          value={formData.dataTransacao}
+          onChange={handleChange}
+        />
+        <Button type="submit">Registrar Transação</Button>
       </Form>
       <ToastContainer />
     </Container>

@@ -12,10 +12,11 @@ export default async function handler(
       .json({ message: `Método ${req.method} não permitido.` });
   }
 
-  // Recupera os cabeçalhos para a chave de verificação e nome do banco
+  // Verificar a chave de verificação e nome do banco nos cabeçalhos da requisição
   const chave = req.headers["x-verificacao-chave"];
-  const nomeBanco = req.query.banco as string;
+  const nomeBanco = req.headers["x-nome-banco"]; // Alterando para buscar o nome do banco nos cabeçalhos
 
+  // Verifique se ambos estão presentes
   if (
     !chave ||
     typeof chave !== "string" ||
@@ -28,10 +29,10 @@ export default async function handler(
   }
 
   try {
-    // Conecta ao banco admin_db para verificar a chave de verificação
+    // Conectar ao banco admin_db para verificar a chave
     const adminConnection = await getClientConnection("admin_db");
 
-    // Verifica o nome do banco associado à chave
+    // Verificar nome do banco associado à chave
     const [result] = await adminConnection.query<RowDataPacket[]>(
       "SELECT nome_banco FROM clientes WHERE codigo_verificacao = ?",
       [chave],
@@ -43,14 +44,15 @@ export default async function handler(
 
     const databaseName = result[0].nome_banco as string;
 
-    // Se o nome do banco passado na requisição não corresponder ao nome do banco verificado
+    // Verifique se o nome do banco na requisição corresponde ao banco verificado
     if (databaseName !== nomeBanco) {
       return res.status(400).json({ message: "Nome do banco inválido." });
     }
 
-    // Conecta ao banco do cliente usando o nome do banco obtido
+    // Conectar ao banco do cliente
     const clientConnection = await getClientConnection(databaseName);
 
+    // Recuperar os dados do corpo da requisição
     const {
       observacao,
       tipoTransacao,
@@ -115,7 +117,7 @@ export default async function handler(
       ]; // Se não for Dízimo, membroId pode ser null
     } else if (tipoTransacao === "Saida") {
       query =
-        "INSERT INTO saida (observacao, tipo, forma_pagamento, valor, data_saida) VALUES (?, ?, ?, ?, ?)";
+        "INSERT INTO saida (observacao, tipo, forma_pagamento, valor, data) VALUES (?, ?, ?, ?, ?)";
       queryParams = [observacao, tipo, formaPagamento, valor, dataTransacao];
     } else {
       return res.status(400).json({ message: "Tipo de transação inválido." });
