@@ -28,11 +28,39 @@ const LoginPage = () => {
     if (nome_banco && nome_igreja && clienteAtivo) {
       setIsCodigoVerificacaoValidado(true);
       setNomeIgreja(nome_igreja || "Igreja não definida");
-      setIsClienteAtivo(clienteAtivo);
+      setIsClienteAtivo(true); // Inicialmente assume que o cliente está ativo
+      // Verifica novamente o status no banco admin
+      checkClienteAtivoStatus(clienteAtivo);
     } else {
       console.log("Erro: As chaves não foram encontradas no localStorage.");
     }
   }, []);
+
+  // Função para verificar o status do cliente no banco admin
+  const checkClienteAtivoStatus = async (clienteAtivo) => {
+    if (clienteAtivo) {
+      try {
+        const response = await fetch(
+          `/api/clientes?banco=admin&clienteId=${codigoVerificacao}`,
+        );
+        const data = await response.json();
+
+        if (data.error || data.status !== "ativo") {
+          setIsClienteAtivo(false);
+          localStorage.setItem("cliente_ativo", "false");
+          toast.error("O cliente está inativo. Acesso bloqueado.");
+        } else {
+          setIsClienteAtivo(true);
+        }
+      } catch (error) {
+        console.error(
+          "Erro ao verificar o status do cliente no banco admin:",
+          error,
+        );
+        toast.error("Erro ao verificar o status do cliente.");
+      }
+    }
+  };
 
   // Função para validar o código de verificação
   const handleCodigoVerificacaoSubmit = async () => {
@@ -161,6 +189,23 @@ const LoginPage = () => {
     );
   }
 
+  // Se o cliente não estiver ativo, exibe mensagem
+  if (!isClienteAtivo) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="w-full max-w-sm rounded-md border bg-white p-6 shadow-lg">
+          <ToastContainer position="top-right" autoClose={5000} />
+          <div className="mb-4 flex justify-center">
+            <Image src="/logosoft.png" alt="Logo" width={320} height={100} />
+          </div>
+          <p className="text-center font-bold text-red-500">
+            Este cliente está inativo. Acesso bloqueado.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-sm rounded-md border bg-white p-6 shadow-lg">
@@ -171,19 +216,19 @@ const LoginPage = () => {
 
         {!isCodigoVerificacaoValidado ? (
           <div>
-            <label className="text-media mb-2 block text-sm font-bold">
+            <label className="mb-2 block text-sm font-bold text-media">
               Adicione o código de Verificação
             </label>
             <input
               type="text"
               value={codigoVerificacao}
               onChange={(e) => setCodigoVerificacao(e.target.value)}
-              className="border-media mb-4 w-full rounded border p-2 "
+              className="mb-4 w-full rounded border border-media p-2"
               disabled={loading}
             />
             <button
               onClick={handleCodigoVerificacaoSubmit}
-              className={`bg-media w-full rounded py-2 font-bold text-white ${
+              className={`w-full rounded bg-media py-2 font-bold text-white ${
                 loading ? "cursor-not-allowed opacity-50" : ""
               }`}
               disabled={loading}
@@ -193,32 +238,32 @@ const LoginPage = () => {
           </div>
         ) : (
           <div>
-            <p className="text-media mb-4 text-sm font-bold">
+            <p className="mb-4 text-sm font-bold text-media">
               Licenciado para: {nomeIgreja || "Igreja não definida"}
             </p>
-            <label className="text-media mb-2 block text-sm font-bold">
+            <label className="mb-2 block text-sm font-bold text-media">
               E-mail
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border-media mb-4 w-full rounded border p-2 "
+              className="mb-4 w-full rounded border border-media p-2"
               disabled={loading}
             />
-            <label className="text-media mb-2 block text-sm font-bold">
+            <label className="mb-2 block text-sm font-bold text-media">
               Senha
             </label>
             <input
               type="password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
-              className="border-media mb-4 w-full rounded border p-2"
+              className="mb-4 w-full rounded border border-media p-2"
               disabled={loading}
             />
             <button
               onClick={handleLoginSubmit}
-              className={`bg-media w-full rounded py-2 text-white ${
+              className={`w-full rounded bg-media py-2 text-white ${
                 loading ? "cursor-not-allowed opacity-50" : ""
               }`}
               disabled={loading}
