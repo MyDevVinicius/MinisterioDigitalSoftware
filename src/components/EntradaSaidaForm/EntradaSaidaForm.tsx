@@ -19,6 +19,8 @@ interface EntradaSaida {
   valor: number;
   dataTransacao: string; // Data da transação (Entrada ou Saída)
   membroId?: number; // ID do membro (se entrada)
+  valorPago?: number; // Campo adicionado para saída
+  dataVencimento?: string; // Campo adicionado para saída
 }
 
 interface Membro {
@@ -27,7 +29,7 @@ interface Membro {
 }
 
 const Container = styled.div`
-  max-width: 600px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 20px;
   border: 1px solid #ccc;
@@ -42,30 +44,40 @@ const Container = styled.div`
 
 const Form = styled.form`
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 15px;
+`;
+
+const FormGroup = styled.div`
+  flex: 1 1 45%;
 `;
 
 const Label = styled.label`
   font-size: 16px;
   margin-bottom: 5px;
+  display: block;
 `;
 
 const Input = styled.input`
+  width: 100%;
   padding: 10px;
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  margin-bottom: 10px;
 `;
 
 const Select = styled.select`
+  width: 100%;
   padding: 10px;
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  margin-bottom: 10px;
 `;
 
 const Button = styled.button`
+  width: 100%;
   padding: 10px;
   background-color: #007bff;
   color: white;
@@ -135,7 +147,6 @@ const EntradaSaidaForm: React.FC = () => {
       [name]: value,
     }));
   };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -148,7 +159,12 @@ const EntradaSaidaForm: React.FC = () => {
     }
 
     try {
-      const response = await fetch("/api/entradasaida", {
+      const endpoint =
+        formData.tipoTransacao === "Entrada"
+          ? "/api/financeiroentrada"
+          : "/api/financeirosaida";
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,34 +198,40 @@ const EntradaSaidaForm: React.FC = () => {
     <Container>
       <h2>Registrar Entrada/Saída</h2>
       <Form onSubmit={handleSubmit}>
-        <Label>Observação</Label>
-        <Input
-          type="text"
-          name="observacao"
-          value={formData.observacao}
-          onChange={handleChange}
-        />
-        <Label>Tipo de Transação</Label>
-        <Select
-          name="tipoTransacao"
-          value={formData.tipoTransacao}
-          onChange={handleChange}
-        >
-          <option value="Entrada">Entrada</option>
-          <option value="Saida">Saída</option>
-        </Select>
-        <Label>Tipo</Label>
-        <Select name="tipo" value={formData.tipo} onChange={handleChange}>
-          <option value="Dizimo">Dízimo</option>
-          <option value="Oferta">Oferta</option>
-          <option value="Doacao">Doação</option>
-          <option value="Campanha">Campanha</option>
-          <option value="Pagamento">Pagamento</option>
-          <option value="Salario">Salário</option>
-          <option value="Ajuda de Custo">Ajuda de Custo</option>
-        </Select>
+        <FormGroup>
+          <Label>Observação</Label>
+          <Input
+            type="text"
+            name="observacao"
+            value={formData.observacao}
+            onChange={handleChange}
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label>Tipo de Transação</Label>
+          <Select
+            name="tipoTransacao"
+            value={formData.tipoTransacao}
+            onChange={handleChange}
+          >
+            <option value="Entrada">Entrada</option>
+            <option value="Saida">Saída</option>
+          </Select>
+        </FormGroup>
+        <FormGroup>
+          <Label>Tipo</Label>
+          <Select name="tipo" value={formData.tipo} onChange={handleChange}>
+            <option value="Dizimo">Dízimo</option>
+            <option value="Oferta">Oferta</option>
+            <option value="Doacao">Doação</option>
+            <option value="Campanha">Campanha</option>
+            <option value="Pagamento">Pagamento</option>
+            <option value="Salario">Salário</option>
+            <option value="Ajuda de Custo">Ajuda de Custo</option>
+          </Select>
+        </FormGroup>
         {formData.tipoTransacao === "Entrada" && formData.tipo === "Dizimo" && (
-          <>
+          <FormGroup>
             <Label>Membro</Label>
             <Select
               name="membroId"
@@ -223,34 +245,64 @@ const EntradaSaidaForm: React.FC = () => {
                 </option>
               ))}
             </Select>
+          </FormGroup>
+        )}
+        <FormGroup>
+          <Label>Forma de Pagamento</Label>
+          <Select
+            name="formaPagamento"
+            value={formData.formaPagamento}
+            onChange={handleChange}
+          >
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="PIX">PIX</option>
+            <option value="Debito">Débito</option>
+            <option value="Credito">Crédito</option>
+          </Select>
+        </FormGroup>
+        <FormGroup>
+          <Label>Valor</Label>
+          <Input
+            type="number"
+            name="valor"
+            value={formData.valor}
+            onChange={handleChange}
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label>Data da Transação</Label>
+          <Input
+            type="datetime-local"
+            name="dataTransacao"
+            value={formData.dataTransacao}
+            onChange={handleChange}
+          />
+        </FormGroup>
+        {formData.tipoTransacao === "Saida" && (
+          <>
+            <FormGroup>
+              <Label>Valor Pago</Label>
+              <Input
+                type="number"
+                name="valorPago"
+                value={formData.valorPago || 0}
+                onChange={handleChange}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label>Data de Vencimento</Label>
+              <Input
+                type="date"
+                name="dataVencimento"
+                value={formData.dataVencimento || ""}
+                onChange={handleChange}
+              />
+            </FormGroup>
           </>
         )}
-        <Label>Forma de Pagamento</Label>
-        <Select
-          name="formaPagamento"
-          value={formData.formaPagamento}
-          onChange={handleChange}
-        >
-          <option value="Dinheiro">Dinheiro</option>
-          <option value="PIX">PIX</option>
-          <option value="Debito">Débito</option>
-          <option value="Credito">Crédito</option>
-        </Select>
-        <Label>Valor</Label>
-        <Input
-          type="number"
-          name="valor"
-          value={formData.valor}
-          onChange={handleChange}
-        />
-        <Label>Data da Transação</Label>
-        <Input
-          type="datetime-local"
-          name="dataTransacao"
-          value={formData.dataTransacao}
-          onChange={handleChange}
-        />
-        <Button type="submit">Registrar Transação</Button>
+        <FormGroup style={{ flexBasis: "100%" }}>
+          <Button type="submit">Registrar Transação</Button>
+        </FormGroup>
       </Form>
       <ToastContainer />
     </Container>

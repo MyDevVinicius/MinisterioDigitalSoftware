@@ -90,6 +90,7 @@ const ContasAPagarList: React.FC = () => {
   return (
     <div className="mx-auto w-full max-w-full space-y-4 p-4">
       <ToastContainer />
+      <h1 className="text-[1.4rem] font-bold">Resumo de Contas </h1>
       <div className="flex flex-wrap items-center gap-4">
         <select
           value={statusFilter}
