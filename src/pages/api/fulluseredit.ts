@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getClientConnection } from "../../lib/db";
+import { getClientConnection } from "../../../lib/db";
 import bcrypt from "bcryptjs";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   const { banco } = req.query;
 
@@ -28,7 +28,7 @@ export default async function handler(
     // Buscar o usuário atual para comparar os dados
     const [rows] = await clientConnection.query(
       "SELECT * FROM usuarios WHERE id = ?",
-      [id]
+      [id],
     );
     const currentUser = rows[0];
 
@@ -76,17 +76,15 @@ export default async function handler(
 
     // Buscar a lista atualizada de usuários
     const [updatedRows] = await clientConnection.query(
-      "SELECT * FROM usuarios"
+      "SELECT * FROM usuarios",
     );
 
     clientConnection.release();
 
-    return res
-      .status(200)
-      .json({
-        message: "Usuário atualizado com sucesso.",
-        usuarios: updatedRows,
-      });
+    return res.status(200).json({
+      message: "Usuário atualizado com sucesso.",
+      usuarios: updatedRows,
+    });
   } catch (error) {
     console.error("Erro ao editar usuário:", error);
     return res.status(500).json({ message: "Erro ao editar usuário." });

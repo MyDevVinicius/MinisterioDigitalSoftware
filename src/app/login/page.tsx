@@ -182,7 +182,7 @@ const LoginPage = () => {
             <Image src="/logosoft.png" alt="Logo" width={320} height={100} />
           </div>
           <p className="text-center font-bold text-red-500">
-            Este cliente está inativo. Acesso bloqueado.
+            Recarregue a pagina e ou preencha o codigo de ativação.
           </p>
         </div>
       </div>

@@ -1,14 +1,22 @@
-import { Metadata } from "next";
+"use client";
+
+import React, { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import UsuarioComponet from "@/components/UsuarioComponent/UsuarioComponent";
 
-export const metadata: Metadata = {
-  title: "Next.js Profile | TailAdmin - Next.js Dashboard Template",
-  description:
-    "This is Next.js Profile page for TailAdmin - Next.js Tailwind CSS Admin Dashboard Template",
-};
-
 const Profile = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    const clienteAtivo = localStorage.getItem("cliente_ativo");
+
+    // Redireciona para o login se o cliente não estiver ativo
+    if (clienteAtivo !== "true") {
+      router.push("/login");
+    }
+  }, [router]);
+
   return (
     <DefaultLayout>
       <UsuarioComponet />
