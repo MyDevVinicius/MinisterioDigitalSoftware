@@ -18,51 +18,24 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Usando o useEffect para verificar o localStorage na carga do componente
   useEffect(() => {
     const nome_banco = localStorage.getItem("nome_banco");
     const nome_igreja = localStorage.getItem("nome_igreja");
     const clienteAtivo = localStorage.getItem("cliente_ativo") === "true";
 
-    // Verifica se as chaves estão no localStorage antes de atualizar o estado
+    if (!clienteAtivo) {
+      setIsClienteAtivo(false);
+      return;
+    }
+
     if (nome_banco && nome_igreja && clienteAtivo) {
       setIsCodigoVerificacaoValidado(true);
       setNomeIgreja(nome_igreja || "Igreja não definida");
-      setIsClienteAtivo(true); // Inicialmente assume que o cliente está ativo
-      // Verifica novamente o status no banco admin
-      checkClienteAtivoStatus(clienteAtivo);
     } else {
       console.log("Erro: As chaves não foram encontradas no localStorage.");
     }
   }, []);
 
-  // Função para verificar o status do cliente no banco admin
-  const checkClienteAtivoStatus = async (clienteAtivo) => {
-    if (clienteAtivo) {
-      try {
-        const response = await fetch(
-          `/api/clientes?banco=admin&clienteId=${codigoVerificacao}`,
-        );
-        const data = await response.json();
-
-        if (data.error || data.status !== "ativo") {
-          setIsClienteAtivo(false);
-          localStorage.setItem("cliente_ativo", "false");
-          toast.error("O cliente está inativo. Acesso bloqueado.");
-        } else {
-          setIsClienteAtivo(true);
-        }
-      } catch (error) {
-        console.error(
-          "Erro ao verificar o status do cliente no banco admin:",
-          error,
-        );
-        toast.error("Erro ao verificar o status do cliente.");
-      }
-    }
-  };
-
-  // Função para validar o código de verificação
   const handleCodigoVerificacaoSubmit = async () => {
     setErro("");
     setLoading(true);
@@ -98,7 +71,6 @@ const LoginPage = () => {
         return;
       }
 
-      // Armazenar os dados no localStorage
       localStorage.setItem("nome_banco", data.nome_banco);
       localStorage.setItem("nome_igreja", data.nome_igreja);
       localStorage.setItem("cliente_ativo", "true");
@@ -119,7 +91,6 @@ const LoginPage = () => {
     }
   };
 
-  // Função para submeter o login do usuário
   const handleLoginSubmit = async () => {
     setErro("");
     setLoading(true);
@@ -133,6 +104,14 @@ const LoginPage = () => {
 
     const nome_banco = localStorage.getItem("nome_banco");
     const codigo_verificacao = localStorage.getItem("codigo_verificacao");
+    const clienteAtivo = localStorage.getItem("cliente_ativo") === "true";
+
+    if (!clienteAtivo) {
+      setErro("O cliente está inativo. Acesso bloqueado.");
+      toast.error("O cliente está inativo. Acesso bloqueado.");
+      setLoading(false);
+      return;
+    }
 
     if (!nome_banco || !codigo_verificacao) {
       setErro("Banco de dados do cliente não encontrado.");
@@ -162,6 +141,16 @@ const LoginPage = () => {
         return;
       }
 
+      // Verifica se o cliente ainda está ativo após o login
+      if (data.clienteStatus !== "ativo") {
+        setIsClienteAtivo(false);
+        localStorage.setItem("cliente_ativo", "false");
+        toast.error("O cliente está inativo. Acesso bloqueado.");
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem("email", email);
       toast.success("Login realizado com sucesso!");
       router.push("/dashboard");
     } catch (error) {
@@ -172,7 +161,6 @@ const LoginPage = () => {
     }
   };
 
-  // Se o cliente não estiver ativo, exibe mensagem
   if (!isClienteAtivo) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -182,25 +170,29 @@ const LoginPage = () => {
             <Image src="/logosoft.png" alt="Logo" width={320} height={100} />
           </div>
           <p className="text-center font-bold text-red-500">
-            Recarregue a pagina e ou preencha o codigo de ativação.
+            O acesso está bloqueado.
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se o cliente não estiver ativo, exibe mensagem
-  if (!isClienteAtivo) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="w-full max-w-sm rounded-md border bg-white p-6 shadow-lg">
-          <ToastContainer position="top-right" autoClose={5000} />
-          <div className="mb-4 flex justify-center">
-            <Image src="/logosoft.png" alt="Logo" width={320} height={100} />
+          <div className="mt-4">
+            <label className="mb-2 block text-sm font-bold text-media">
+              Adicione o código de Verificação
+            </label>
+            <input
+              type="text"
+              value={codigoVerificacao}
+              onChange={(e) => setCodigoVerificacao(e.target.value)}
+              className="mb-4 w-full rounded border border-media p-2"
+              disabled={loading}
+            />
+            <button
+              onClick={handleCodigoVerificacaoSubmit}
+              className={`w-full rounded bg-media py-2 font-bold text-white ${
+                loading ? "cursor-not-allowed opacity-50" : ""
+              }`}
+              disabled={loading}
+            >
+              {loading ? "Validando..." : "Validar Código"}
+            </button>
           </div>
-          <p className="text-center font-bold text-red-500">
-            Este cliente está inativo. Acesso bloqueado.
-          </p>
         </div>
       </div>
     );
@@ -261,6 +253,7 @@ const LoginPage = () => {
               className="mb-4 w-full rounded border border-media p-2"
               disabled={loading}
             />
+
             <button
               onClick={handleLoginSubmit}
               className={`w-full rounded bg-media py-2 text-white ${
