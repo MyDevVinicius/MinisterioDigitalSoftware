@@ -19,15 +19,18 @@ export default async function handler(
     return res.status(405).json({ message: "Método não permitido." });
   }
 
+  let clientConnection;
+
   try {
-    const clientConnection = await getClientConnection(banco);
+    clientConnection = await getClientConnection(banco);
 
     await clientConnection.query("DELETE FROM usuarios WHERE id = ?", [id]);
-    clientConnection.release();
 
     return res.status(200).json({ message: "Usuário deletado com sucesso." });
   } catch (error) {
     console.error("Erro ao deletar usuário:", error);
     return res.status(500).json({ message: "Erro ao deletar usuário." });
+  } finally {
+    if (clientConnection) clientConnection.release();
   }
 }

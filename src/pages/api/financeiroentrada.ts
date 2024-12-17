@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getClientConnection } from "../../../lib/db"; // Ajuste o caminho do db.ts
+import { RowDataPacket } from "mysql2";
 
 export default async function handler(
   req: NextApiRequest,
@@ -25,8 +26,11 @@ export default async function handler(
     });
   }
 
+  let adminConnection;
+  let clientConnection;
+
   try {
-    const adminConnection = await getClientConnection("admin_db");
+    adminConnection = await getClientConnection("admin_db");
     const [result] = await adminConnection.query<RowDataPacket[]>(
       "SELECT nome_banco FROM clientes WHERE codigo_verificacao = ?",
       [chave],
@@ -42,7 +46,7 @@ export default async function handler(
       return res.status(400).json({ message: "Nome do banco inválido." });
     }
 
-    const clientConnection = await getClientConnection(databaseName);
+    clientConnection = await getClientConnection(databaseName);
 
     const { observacao, tipo, formaPagamento, valor, dataTransacao, membroId } =
       req.body;
@@ -68,5 +72,8 @@ export default async function handler(
     return res.status(201).json({ message: "Entrada registrada com sucesso." });
   } catch (error) {
     return res.status(500).json({ message: "Erro ao registrar entrada." });
+  } finally {
+    if (adminConnection) adminConnection.release();
+    if (clientConnection) clientConnection.release();
   }
 }

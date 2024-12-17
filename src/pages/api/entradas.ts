@@ -27,9 +27,12 @@ export default async function handler(
     });
   }
 
+  let adminConnection;
+  let clientConnection;
+
   try {
     // Conecta ao banco admin_db para verificar a chave de verificação
-    const adminConnection = await getClientConnection("admin_db");
+    adminConnection = await getClientConnection("admin_db");
 
     // Verifica o nome do banco associado à chave
     const [result] = await adminConnection.query<RowDataPacket[]>(
@@ -49,16 +52,12 @@ export default async function handler(
     }
 
     // Conecta ao banco do cliente usando o nome do banco obtido
-    const clientConnection = await getClientConnection(databaseName);
+    clientConnection = await getClientConnection(databaseName);
 
     // Consulta para buscar entradas
     const [rows] = await clientConnection.query<RowDataPacket[]>(
       "SELECT * FROM entrada", // Substitua pela consulta real para entradas
     );
-
-    // Libera as conexões
-    adminConnection.release();
-    clientConnection.release();
 
     // Retorna os dados de entradas
     return res.status(200).json(rows);
@@ -67,5 +66,8 @@ export default async function handler(
     return res.status(500).json({
       message: "Erro interno no servidor.",
     });
+  } finally {
+    if (adminConnection) adminConnection.release();
+    if (clientConnection) clientConnection.release();
   }
 }

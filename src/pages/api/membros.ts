@@ -25,9 +25,12 @@ export default async function handler(
     });
   }
 
+  let adminConnection;
+  let clientConnection;
+
   try {
     // Conecta ao banco admin_db para verificar a chave de verificação
-    const adminConnection = await getClientConnection("admin_db");
+    adminConnection = await getClientConnection("admin_db");
 
     // Verifica o nome do banco associado à chave
     const [result] = await adminConnection.query<RowDataPacket[]>(
@@ -42,7 +45,7 @@ export default async function handler(
     const databaseName = result[0].nome_banco as string;
 
     // Conecta ao banco do cliente usando o nome do banco obtido
-    const clientConnection = await getClientConnection(databaseName);
+    clientConnection = await getClientConnection(databaseName);
 
     // Consulta para contar os membros na tabela 'membros'
     const [rows] = await clientConnection.query<MembrosCount[]>(
@@ -52,10 +55,6 @@ export default async function handler(
     // Garante que 'rows' seja tratado corretamente
     const quantidade = rows.length > 0 ? rows[0].quantidade : 0;
 
-    // Libera as conexões
-    adminConnection.release();
-    clientConnection.release();
-
     // Retorna a quantidade de membros
     return res.status(200).json({ quantidade });
   } catch (error: any) {
@@ -63,5 +62,8 @@ export default async function handler(
     return res.status(500).json({
       message: "Erro interno no servidor.",
     });
+  } finally {
+    if (adminConnection) adminConnection.release();
+    if (clientConnection) clientConnection.release();
   }
 }

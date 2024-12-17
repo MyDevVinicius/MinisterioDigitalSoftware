@@ -1,12 +1,23 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getClientConnection } from "../../../lib/db";
 import bcrypt from "bcryptjs";
+import { RowDataPacket } from "mysql2";
+
+// Interface para a resposta da query do banco de dados
+interface Usuario extends RowDataPacket {
+  id: string;
+  nome: string;
+  email: string;
+  senha: string;
+  cargo: string;
+  usuario_id?: string;
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { banco } = req.query;
+  const { banco } = req.query as { banco: string };
 
   if (!banco || typeof banco !== "string") {
     return res.status(400).json({ message: "Banco de dados não fornecido." });
@@ -22,24 +33,25 @@ export default async function handler(
     return res.status(400).json({ message: "ID do usuário não fornecido." });
   }
 
+  let clientConnection;
+
   try {
-    const clientConnection = await getClientConnection(banco);
+    clientConnection = await getClientConnection(banco);
 
     // Buscar o usuário atual para comparar os dados
-    const [rows] = await clientConnection.query(
+    const [rows] = await clientConnection.query<Usuario[]>(
       "SELECT * FROM usuarios WHERE id = ?",
       [id],
     );
     const currentUser = rows[0];
 
     if (!currentUser) {
-      clientConnection.release();
       return res.status(404).json({ message: "Usuário não encontrado." });
     }
 
     // Montar a consulta de atualização dinamicamente
-    const updates = [];
-    const values = [];
+    const updates: string[] = [];
+    const values: (string | undefined)[] = [];
 
     if (nome && nome !== currentUser.nome) {
       updates.push("nome = ?");
@@ -75,18 +87,18 @@ export default async function handler(
     }
 
     // Buscar a lista atualizada de usuários
-    const [updatedRows] = await clientConnection.query(
+    const [updatedRows] = await clientConnection.query<Usuario[]>(
       "SELECT * FROM usuarios",
     );
-
-    clientConnection.release();
 
     return res.status(200).json({
       message: "Usuário atualizado com sucesso.",
       usuarios: updatedRows,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro ao editar usuário:", error);
     return res.status(500).json({ message: "Erro ao editar usuário." });
+  } finally {
+    if (clientConnection) clientConnection.release();
   }
 }

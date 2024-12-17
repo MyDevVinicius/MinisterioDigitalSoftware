@@ -1,4 +1,3 @@
-// src/pages/api/memberList.ts
 import { NextApiRequest, NextApiResponse } from "next";
 import { getClientConnection } from "../../../lib/db"; // Ajuste o caminho para o db.ts
 import { RowDataPacket } from "mysql2";
@@ -29,9 +28,12 @@ export default async function handler(
     });
   }
 
+  let adminConnection;
+  let clientConnection;
+
   try {
     // Conectar ao banco admin_db para verificar a chave
-    const adminConnection = await getClientConnection("admin_db");
+    adminConnection = await getClientConnection("admin_db");
 
     const [result] = await adminConnection.query<RowDataPacket[]>(
       "SELECT nome_banco FROM clientes WHERE codigo_verificacao = ?",
@@ -45,21 +47,20 @@ export default async function handler(
     const databaseName = result[0].nome_banco as string;
 
     // Conectar ao banco do cliente
-    const clientConnection = await getClientConnection(databaseName);
+    clientConnection = await getClientConnection(databaseName);
 
     // Consulta para buscar membros
     const [membros] = await clientConnection.query<MembrosCount[]>(
       "SELECT id, nome FROM membros",
     );
 
-    // Libera as conexões
-    adminConnection.release();
-    clientConnection.release();
-
     // Retorna os membros
     return res.status(200).json({ membros });
   } catch (error) {
     console.error("Erro ao buscar membros:", error);
     return res.status(500).json({ message: "Erro interno no servidor." });
+  } finally {
+    if (adminConnection) adminConnection.release();
+    if (clientConnection) clientConnection.release();
   }
 }

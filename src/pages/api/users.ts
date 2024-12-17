@@ -1,9 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getClientConnection } from "../../lib/db"; // Certifique-se de ajustar o caminho do db.ts
+import { getClientConnection } from "../../../lib/db"; // Certifique-se de ajustar o caminho do db.ts
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   // Verificando o método da requisição
   if (req.method !== "GET") {
@@ -22,17 +22,16 @@ export default async function handler(
     });
   }
 
+  let connection;
+
   try {
     // Obtendo a conexão com o banco do cliente usando o nome do banco recebido
-    const connection = await getClientConnection(nomeBanco);
+    connection = await getClientConnection(nomeBanco);
 
     // Consulta para contar o número total de usuários na tabela 'usuarios'
     const [rows] = await connection.execute<any[]>(
-      "SELECT COUNT(*) AS quantidade FROM usuarios"
+      "SELECT COUNT(*) AS quantidade FROM usuarios",
     );
-
-    // Fechando a conexão
-    connection.release();
 
     // Retornando a quantidade de usuários
     const quantidade = rows[0].quantidade;
@@ -41,5 +40,7 @@ export default async function handler(
   } catch (error: any) {
     console.error("Erro ao acessar o banco de dados:", error);
     return res.status(500).json({ message: "Erro interno do servidor" });
+  } finally {
+    if (connection) connection.release();
   }
 }

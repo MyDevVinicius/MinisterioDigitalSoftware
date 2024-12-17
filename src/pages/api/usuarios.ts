@@ -28,15 +28,11 @@ export default async function handler(
       .json({ error: "Email e nome_banco são obrigatórios." });
   }
 
+  let clientConnection;
+
   try {
     // Conectar ao banco de dados do cliente usando o nome_banco
-    const clientConnection = await getClientConnection(nome_banco as string);
-
-    if (!clientConnection) {
-      return res
-        .status(500)
-        .json({ error: "Erro ao conectar ao banco de dados do cliente" });
-    }
+    clientConnection = await getClientConnection(nome_banco as string);
 
     // Consulta SQL para buscar os dados do usuário
     const userSql = "SELECT email, nome, cargo FROM usuarios WHERE email = ?";
@@ -59,5 +55,7 @@ export default async function handler(
   } catch (error) {
     console.error("Erro ao buscar dados do usuário:", error);
     return res.status(500).json({ error: "Erro interno do servidor" });
+  } finally {
+    if (clientConnection) clientConnection.release();
   }
 }

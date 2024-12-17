@@ -1,12 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
-import { getClientConnection } from "../../../lib/db"; // Função para conectar ao banco de dados do cliente
+import jwt from "jsonwebtoken";
+import { getClientConnection } from "../../../lib/db";
 import { RowDataPacket } from "mysql2";
+import { isEmail } from "validator";
 
+// Definindo a tipagem do usuário
 interface Usuario extends RowDataPacket {
   email: string;
   nome: string;
-  senha: string; // A senha deve ser retornada para comparação
+  senha: string;
 }
 
 export default async function handler(
@@ -20,17 +23,24 @@ export default async function handler(
       .json({ error: `Método ${req.method} não permitido` });
   }
 
-  // Extrai os dados do corpo da requisição
+  // Desestrutura os campos necessários da requisição
   const { email, senha, nome_banco } = req.body;
 
-  // Verifica se todos os campos obrigatórios estão presentes
+  // Verifica se os campos obrigatórios foram fornecidos
   if (!email || !senha || !nome_banco) {
     return res.status(400).json({ error: "Todos os campos são obrigatórios." });
   }
 
+  // Valida o formato do email
+  if (!isEmail(email)) {
+    return res.status(400).json({ error: "Email inválido." });
+  }
+
+  let clientConnection;
+
   try {
-    // Conectar ao banco de dados do cliente usando o nome_banco
-    const clientConnection = await getClientConnection(nome_banco);
+    // Estabelece a conexão com o banco de dados do cliente
+    clientConnection = await getClientConnection(nome_banco);
 
     if (!clientConnection) {
       return res
@@ -38,7 +48,7 @@ export default async function handler(
         .json({ error: "Erro ao conectar ao banco de dados do cliente" });
     }
 
-    // Consulta SQL para verificar o usuário no banco de dados
+    // Consulta o banco de dados para encontrar o usuário com o email fornecido
     const userSql = "SELECT email, nome, senha FROM usuarios WHERE email = ?";
     const [userRows] = await clientConnection.execute<Usuario[]>(userSql, [
       email,
@@ -46,21 +56,29 @@ export default async function handler(
 
     // Verifica se o usuário foi encontrado
     if (userRows.length === 0) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
+      return res.status(401).json({ error: "Email ou senha inválidos." });
     }
 
     const user = userRows[0];
 
-    // Verifica se a senha fornecida é válida comparando com a senha hashada no banco
+    // Verifica se a senha fornecida é válida
     const senhaValida = await bcrypt.compare(senha, user.senha);
 
     if (!senhaValida) {
-      return res.status(401).json({ error: "Credenciais inválidas" });
+      return res.status(401).json({ error: "Email ou senha inválidos." });
     }
 
-    // Se as credenciais forem válidas, retorna o usuário autenticado
+    // Gera o token JWT com as informações do usuário
+    const token = jwt.sign(
+      { email: user.email, nome: user.nome },
+      process.env.JWT_SECRET!, // A chave secreta deve ser armazenada de forma segura
+      { expiresIn: "1h" }, // O token expira em 1 hora
+    );
+
+    // Retorna o token e as informações do usuário autenticado
     return res.status(200).json({
       message: "Login realizado com sucesso!",
+      token,
       usuario: {
         email: user.email,
         nome: user.nome,
@@ -69,5 +87,8 @@ export default async function handler(
   } catch (error) {
     console.error("Erro na autenticação:", error);
     return res.status(500).json({ error: "Erro interno do servidor" });
+  } finally {
+    // Libera a conexão com o banco, se houver
+    if (clientConnection) clientConnection.release();
   }
 }

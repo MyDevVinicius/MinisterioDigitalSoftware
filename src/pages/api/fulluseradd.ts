@@ -22,8 +22,10 @@ export default async function handler(
     return res.status(400).json({ message: "Dados incompletos." });
   }
 
+  let clientConnection;
+
   try {
-    const clientConnection = await getClientConnection(banco);
+    clientConnection = await getClientConnection(banco);
 
     // Criptografar a senha antes de salvar
     const hashedSenha = await bcrypt.hash(senha, 10);
@@ -37,13 +39,13 @@ export default async function handler(
     // Buscar a lista atualizada de usuários
     const [rows] = await clientConnection.query("SELECT * FROM usuarios");
 
-    clientConnection.release();
-
     return res
       .status(201)
       .json({ message: "Usuário adicionado com sucesso.", usuarios: rows });
   } catch (error) {
     console.error("Erro ao adicionar usuário:", error);
     return res.status(500).json({ message: "Erro ao adicionar usuário." });
+  } finally {
+    if (clientConnection) clientConnection.release();
   }
 }

@@ -26,8 +26,11 @@ export default async function handler(
     });
   }
 
+  let adminConnection;
+  let clientConnection;
+
   try {
-    const adminConnection = await getClientConnection("admin_db");
+    adminConnection = await getClientConnection("admin_db");
     const [result] = await adminConnection.query<RowDataPacket[]>(
       "SELECT nome_banco FROM clientes WHERE codigo_verificacao = ?",
       [chave],
@@ -43,7 +46,7 @@ export default async function handler(
       return res.status(400).json({ message: "Nome do banco inválido." });
     }
 
-    const clientConnection = await getClientConnection(databaseName);
+    clientConnection = await getClientConnection(databaseName);
 
     const {
       observacao,
@@ -110,10 +113,16 @@ export default async function handler(
     await clientConnection.query(querySaida, queryParamsSaida);
 
     return res.status(201).json({ message: "Saída registrada com sucesso." });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Erro ao registrar saída:", error);
     return res
       .status(500)
-      .json({ message: "Erro ao registrar saída.", error: error.message });
+      .json({
+        message: "Erro ao registrar saída.",
+        error: (error as Error).message,
+      });
+  } finally {
+    if (adminConnection) adminConnection.release();
+    if (clientConnection) clientConnection.release();
   }
 }

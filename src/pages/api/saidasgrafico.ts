@@ -10,18 +10,22 @@ export default async function handler(
     return res.status(405).json({ message: "Método não permitido." });
   }
 
-  const { "x-verificacao-chave": chave, "x-nome-banco": nomeBanco } =
-    req.headers;
-  const { dataInicial, dataFinal } = req.query;
+  const chave = req.headers["x-verificacao-chave"] as string | undefined;
+  const nomeBanco = req.headers["x-nome-banco"] as string | undefined;
+  const dataInicial = req.query.dataInicial as string | undefined;
+  const dataFinal = req.query.dataFinal as string | undefined;
 
   if (!chave || !nomeBanco || !dataInicial || !dataFinal) {
     return res.status(400).json({ message: "Dados incompletos." });
   }
 
+  let adminConnection;
+  let clientConnection;
+
   try {
-    const adminConnection = await getClientConnection("admin_db");
+    adminConnection = await getClientConnection("admin_db");
     const [result] = await adminConnection.query<RowDataPacket[]>(
-      `SELECT nome_banco FROM clientes WHERE codigo_verificacao = ?`,
+      "SELECT nome_banco FROM clientes WHERE codigo_verificacao = ?",
       [chave],
     );
 
@@ -33,7 +37,7 @@ export default async function handler(
       return res.status(400).json({ message: "Nome do banco inválido." });
     }
 
-    const clientConnection = await getClientConnection(nomeBanco);
+    clientConnection = await getClientConnection(nomeBanco);
 
     const [rows] = await clientConnection.query<RowDataPacket[]>(
       `
@@ -46,9 +50,6 @@ export default async function handler(
       [dataInicial, dataFinal],
     );
 
-    adminConnection.release();
-    clientConnection.release();
-
     const categorias = rows.map((row) => row.dia); // Pode-se formatar a data se necessário
     const valores = rows.map((row) => row.total);
 
@@ -56,5 +57,8 @@ export default async function handler(
   } catch (error) {
     console.error("Erro ao buscar dados de saídas para o gráfico:", error);
     return res.status(500).json({ message: "Erro interno no servidor." });
+  } finally {
+    if (adminConnection) adminConnection.release();
+    if (clientConnection) clientConnection.release();
   }
 }
