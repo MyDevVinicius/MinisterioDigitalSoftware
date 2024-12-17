@@ -22,6 +22,12 @@ const LoginPage = () => {
     const nome_banco = localStorage.getItem("nome_banco");
     const nome_igreja = localStorage.getItem("nome_igreja");
     const clienteAtivo = localStorage.getItem("cliente_ativo") === "true";
+    const codigo_verificacao = localStorage.getItem("codigo_verificacao");
+
+    if (codigo_verificacao) {
+      setCodigoVerificacao(codigo_verificacao);
+      setIsCodigoVerificacaoValidado(true);
+    }
 
     if (!clienteAtivo) {
       setIsClienteAtivo(false);
@@ -48,6 +54,7 @@ const LoginPage = () => {
     }
 
     try {
+      console.log("Enviando código de verificação...");
       const response = await fetch("/api/clientes", {
         method: "POST",
         body: JSON.stringify({ codigo_verificacao: codigoVerificacao }),
@@ -55,6 +62,7 @@ const LoginPage = () => {
       });
 
       const data = await response.json();
+      console.log("Resposta da API /api/clientes:", data);
 
       if (data.error) {
         setErro(data.error);
@@ -63,7 +71,7 @@ const LoginPage = () => {
         return;
       }
 
-      if (!data.status || data.status !== "ativo") {
+      if (!data.cliente.status || data.cliente.status !== "ativo") {
         setIsClienteAtivo(false);
         localStorage.setItem("cliente_ativo", "false");
         toast.error("O cliente está inativo. Acesso bloqueado.");
@@ -71,16 +79,17 @@ const LoginPage = () => {
         return;
       }
 
-      localStorage.setItem("nome_banco", data.nome_banco);
-      localStorage.setItem("nome_igreja", data.nome_igreja);
+      console.log("Salvando informações no localStorage...");
+      localStorage.setItem("nome_banco", data.cliente.nome_banco);
+      localStorage.setItem("nome_igreja", data.cliente.nome_igreja);
       localStorage.setItem("cliente_ativo", "true");
       localStorage.setItem("codigo_verificacao", codigoVerificacao);
 
-      setNomeIgreja(data.nome_igreja);
+      setNomeIgreja(data.cliente.nome_igreja);
       setIsClienteAtivo(true);
       setIsCodigoVerificacaoValidado(true);
       toast.success(
-        `Código validado com sucesso! Licenciado para ${data.nome_igreja}`,
+        `Código validado com sucesso! Licenciado para ${data.cliente.nome_igreja}`,
       );
       setLoading(false);
     } catch (error) {
@@ -121,18 +130,20 @@ const LoginPage = () => {
     }
 
     try {
+      console.log("Enviando dados de login...");
       const response = await fetch("/api/auth", {
         method: "POST",
         body: JSON.stringify({
           email,
           senha,
-          nome_banco,
+          nome_banco, // Aqui o nome do banco vem do localStorage
           codigo_verificacao,
         }),
         headers: { "Content-Type": "application/json" },
       });
 
       const data = await response.json();
+      console.log("Resposta da API /api/auth:", data);
 
       if (data.error) {
         setErro(data.error);
@@ -143,16 +154,20 @@ const LoginPage = () => {
 
       // Verifica se o cliente ainda está ativo após o login
       if (data.clienteStatus !== "ativo") {
+        // Mantém o estado de cliente ativo no localStorage como true se estiver correto
+        if (localStorage.getItem("cliente_ativo") !== "false") {
+          localStorage.setItem("cliente_ativo", "true");
+        }
+
+        toast.success("Login realizado com sucesso!");
+        localStorage.setItem("email", email);
+        router.push("/dashboard");
+      } else {
         setIsClienteAtivo(false);
         localStorage.setItem("cliente_ativo", "false");
         toast.error("O cliente está inativo. Acesso bloqueado.");
         setLoading(false);
-        return;
       }
-
-      localStorage.setItem("email", email);
-      toast.success("Login realizado com sucesso!");
-      router.push("/dashboard");
     } catch (error) {
       console.error("Erro ao autenticar o usuário:", error);
       setErro("Erro ao autenticar o usuário.");
@@ -169,9 +184,7 @@ const LoginPage = () => {
           <div className="mb-4 flex justify-center">
             <Image src="/logosoft.png" alt="Logo" width={320} height={100} />
           </div>
-          <p className="text-center font-bold text-red-500">
-            O acesso está bloqueado.
-          </p>
+          <p className="text-center font-bold text-red-500">Area Restrita </p>
           <div className="mt-4">
             <label className="mb-2 block text-sm font-bold text-media">
               Adicione o código de Verificação
@@ -230,9 +243,6 @@ const LoginPage = () => {
           </div>
         ) : (
           <div>
-            <p className="mb-4 text-sm font-bold text-media">
-              Licenciado para: {nomeIgreja || "Igreja não definida"}
-            </p>
             <label className="mb-2 block text-sm font-bold text-media">
               E-mail
             </label>
@@ -241,7 +251,6 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mb-4 w-full rounded border border-media p-2"
-              disabled={loading}
             />
             <label className="mb-2 block text-sm font-bold text-media">
               Senha
@@ -251,12 +260,10 @@ const LoginPage = () => {
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               className="mb-4 w-full rounded border border-media p-2"
-              disabled={loading}
             />
-
             <button
               onClick={handleLoginSubmit}
-              className={`w-full rounded bg-media py-2 text-white ${
+              className={`w-full rounded bg-media py-2 font-bold text-white ${
                 loading ? "cursor-not-allowed opacity-50" : ""
               }`}
               disabled={loading}
@@ -265,8 +272,6 @@ const LoginPage = () => {
             </button>
           </div>
         )}
-
-        {erro && <p className="mt-4 text-sm text-red-500">{erro}</p>}
       </div>
     </div>
   );

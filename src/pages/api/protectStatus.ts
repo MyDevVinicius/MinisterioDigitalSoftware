@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getClientConnection, getAdminConnection } from "../../../lib/db";
+import { getAdminConnection } from "../../../lib/db";
 import { RowDataPacket, FieldPacket } from "mysql2";
 
 interface ClienteStatus extends RowDataPacket {
@@ -7,14 +7,19 @@ interface ClienteStatus extends RowDataPacket {
 }
 
 // Função para buscar o status do cliente no banco
-const fetchClientStatus = async (connection: any, clienteId: string) => {
+const fetchClientStatus = async (
+  connection: any,
+  codigoVerificacao: string,
+) => {
   const [rows]: [ClienteStatus[], FieldPacket[]] = await connection.query(
-    "SELECT status FROM clientes WHERE id = ?",
-    [clienteId],
+    "SELECT status FROM clientes WHERE codigo_verificacao = ?",
+    [codigoVerificacao],
   );
 
   if (rows.length === 0) {
-    console.log(`Cliente não encontrado no banco com ID: ${clienteId}`);
+    console.log(
+      `Cliente não encontrado no banco com código de verificação: ${codigoVerificacao}`,
+    );
     return null; // Se não encontrar, retornar null
   }
 
@@ -27,26 +32,19 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { banco, clienteId } = req.query as {
-    banco: string;
-    clienteId: string;
+  const { codigoVerificacao } = req.query as {
+    codigoVerificacao: string;
   };
 
   // Verificação básica dos parâmetros de entrada
-  if (!banco || typeof banco !== "string") {
+  if (!codigoVerificacao || typeof codigoVerificacao !== "string") {
+    console.log("Código de verificação não fornecido ou inválido.");
     return res
       .status(400)
-      .json({ message: "Banco de dados não fornecido ou inválido." });
-  }
-
-  if (!clienteId || typeof clienteId !== "string") {
-    return res
-      .status(400)
-      .json({ message: "ID do cliente não fornecido ou inválido." });
+      .json({ message: "Código de verificação não fornecido ou inválido." });
   }
 
   let adminConnection = null;
-  let clientConnection = null;
 
   try {
     // Conexão com o banco administrativo
@@ -54,11 +52,15 @@ export default async function handler(
     console.log("Conectado ao banco administrativo.");
 
     // Busca o status do cliente no banco administrativo
-    const adminStatus = await fetchClientStatus(adminConnection, clienteId);
+    const adminStatus = await fetchClientStatus(
+      adminConnection,
+      codigoVerificacao,
+    );
     console.log("Status do cliente no banco administrativo:", adminStatus);
 
     // Se o cliente não for encontrado ou estiver inativo
     if (adminStatus === null) {
+      console.log("Cliente não encontrado no banco administrativo.");
       return res
         .status(404)
         .json({ message: "Cliente não encontrado no banco administrativo." });
@@ -73,31 +75,11 @@ export default async function handler(
       });
     }
 
-    // Conexão com o banco do cliente
-    clientConnection = await getClientConnection(banco);
-    if (!clientConnection) {
-      console.error("Falha na conexão com o banco do cliente:", banco);
-      return res
-        .status(500)
-        .json({ message: "Erro ao conectar ao banco de dados do cliente." });
-    }
-
-    console.log("Conectado ao banco do cliente:", banco);
-
-    // Verifica o status do cliente no banco do cliente
-    const clientStatus = await fetchClientStatus(clientConnection, clienteId);
-    console.log("Status no banco do cliente:", clientStatus);
-
-    if (clientStatus === "não definido") {
-      return res
-        .status(404)
-        .json({ message: "Cliente não encontrado no banco do cliente." });
-    }
-
-    // Retorna a resposta com status do cliente
+    console.log("Cliente ativo, retornando status.");
+    // Retorna a resposta com status do cliente ativo
     return res.status(200).json({
       message: "Cliente autenticado com sucesso!",
-      status: clientStatus,
+      status: adminStatus,
     });
   } catch (error: any) {
     console.error("Erro ao buscar status do cliente:", error.message);
@@ -107,6 +89,5 @@ export default async function handler(
   } finally {
     // Garantir que as conexões sejam liberadas
     if (adminConnection) await adminConnection.release();
-    if (clientConnection) await clientConnection.release();
   }
 }
