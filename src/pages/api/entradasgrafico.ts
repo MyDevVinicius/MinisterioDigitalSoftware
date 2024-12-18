@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { getClientConnection } from "../../../lib/db"; // Certifique-se de ajustar o caminho do db.ts
+import { getClientConnection } from "../../../lib/db";
 import { RowDataPacket } from "mysql2";
 
 export default async function handler(
@@ -10,16 +10,10 @@ export default async function handler(
     return res.status(405).json({ message: "Método não permitido." });
   }
 
-  const chave = req.headers["x-verificacao-chave"] as
-    | string
-    | string[]
-    | undefined;
-  const nomeBanco = req.headers["x-nome-banco"] as
-    | string
-    | string[]
-    | undefined;
-  const dataInicial = req.query.dataInicial as string | string[] | undefined;
-  const dataFinal = req.query.dataFinal as string | string[] | undefined;
+  const chave = req.headers["x-verificacao-chave"] as string | undefined;
+  const nomeBanco = req.headers["x-nome-banco"] as string | undefined;
+  const dataInicial = req.query.dataInicial as string | undefined;
+  const dataFinal = req.query.dataFinal as string | undefined;
 
   if (!chave || !nomeBanco || !dataInicial || !dataFinal) {
     return res.status(400).json({ message: "Dados incompletos." });
@@ -43,7 +37,7 @@ export default async function handler(
       return res.status(400).json({ message: "Nome do banco inválido." });
     }
 
-    clientConnection = await getClientConnection(nomeBanco as string);
+    clientConnection = await getClientConnection(nomeBanco);
 
     const [rows] = await clientConnection.query<RowDataPacket[]>(
       `
@@ -53,15 +47,15 @@ export default async function handler(
       GROUP BY DATE(data)
       ORDER BY dia ASC;
       `,
-      [dataInicial as string, dataFinal as string],
+      [dataInicial, dataFinal],
     );
 
-    const categorias = rows.map((row) => row.dia); // Pode-se formatar a data se necessário
+    const categorias = rows.map((row) => row.dia);
     const valores = rows.map((row) => row.total);
 
     return res.status(200).json({ categorias, valores });
   } catch (error) {
-    console.error("Erro ao buscar dados de entradas para o gráfico:", error);
+    console.error("Erro ao buscar dados de saídas para o gráfico:", error);
     return res.status(500).json({ message: "Erro interno no servidor." });
   } finally {
     if (adminConnection) adminConnection.release();

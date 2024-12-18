@@ -90,12 +90,14 @@ const ContasAPagarList: React.FC = () => {
   return (
     <div className="mx-auto w-full max-w-full space-y-4 p-4">
       <ToastContainer />
-      <h1 className="text-[1.4rem] font-bold">Resumo de Contas </h1>
+      <h1 className="text-[1.4rem] font-bold text-gray-700">
+        Resumo de Contas{" "}
+      </h1>
       <div className="flex flex-wrap items-center gap-4">
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full rounded-md border p-2 sm:w-auto"
+          className="w-full rounded-md border p-2 text-gray-700 sm:w-auto"
         >
           <option value="Todos">Todos</option>
           <option value="Vencida">Vencida</option>
@@ -108,17 +110,17 @@ const ContasAPagarList: React.FC = () => {
           type="date"
           value={startDateFilter}
           onChange={(e) => setStartDateFilter(e.target.value)}
-          className="w-full rounded-md border p-2 sm:w-auto"
+          className="w-full rounded-md border p-2 text-gray-700 sm:w-auto"
         />
         <input
           type="date"
           value={endDateFilter}
           onChange={(e) => setEndDateFilter(e.target.value)}
-          className="w-full rounded-md border p-2 sm:w-auto"
+          className="w-full rounded-md border p-2 text-gray-700 sm:w-auto"
         />
       </div>
 
-      <table className="mt-4 w-full table-auto border-collapse">
+      <table className="mt-4 w-full table-auto border-collapse text-gray-700">
         <thead>
           <tr>
             <th className="border p-2 text-left">Observação</th>

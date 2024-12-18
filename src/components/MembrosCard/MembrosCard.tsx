@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { FaUsers } from "react-icons/fa"; // Ícone de usuários
+import { BsPersonVcard } from "react-icons/bs";
 
 const QuantidadeMembrosCard: React.FC = () => {
   const [quantidadeMembros, setQuantidadeMembros] = useState<number>(0);
@@ -43,19 +43,18 @@ const QuantidadeMembrosCard: React.FC = () => {
   }, []); // Executa uma vez na montagem do componente
 
   return (
-    <div className="rounded-lg bg-purple-50 p-6 shadow-md">
-      <h2 className="mb-4 mt-4 flex items-center justify-start space-x-2 text-lg font-bold">
-        <FaUsers size={40} className="text-purple-500" /> {/* Ícone */}
-        <span className="text-purple-500">Membros Cadastrados</span>
+    <div className="relative rounded-lg bg-white p-6 shadow-lg">
+      <h2 className="mb-3 flex items-center text-base font-semibold text-gray-700">
+        <BsPersonVcard size={30} className="text-purple-500" />
+        <span className="ml-2">Membros Cadastrados</span>
       </h2>
-      <div className="flex flex-col space-y-4">
+      <div className="text-center">
         {error ? (
-          <p className="text-red-500">{error}</p>
+          <p className="text-sm text-red-500">{error}</p>
         ) : (
-          <div className="flex justify-between text-lg font-semibold">
-            <span className="text-purple-500">{quantidadeMembros}</span>{" "}
-            {/* Exibe a quantidade de membros */}
-          </div>
+          <p className="text-2xl font-bold text-purple-600">
+            {quantidadeMembros}
+          </p>
         )}
       </div>
     </div>

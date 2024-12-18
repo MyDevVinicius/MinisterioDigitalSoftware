@@ -50,7 +50,7 @@ export default async function handler(
       [dataInicial, dataFinal],
     );
 
-    const categorias = rows.map((row) => row.dia); // Pode-se formatar a data se necessário
+    const categorias = rows.map((row) => row.dia);
     const valores = rows.map((row) => row.total);
 
     return res.status(200).json({ categorias, valores });

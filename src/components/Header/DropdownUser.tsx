@@ -45,12 +45,8 @@ const UsuarioInfo: React.FC = () => {
 
   return (
     <div className="usuario-info">
-      <p>
-        <strong>Nome:</strong> {usuario.nome}
-      </p>
-      <p>
-        <strong>Cargo:</strong> {usuario.cargo}
-      </p>
+      <p className="font-semibold text-media">{usuario.nome}</p>
+      <p className="text-[13px] font-semibold text-gray-500">{usuario.cargo}</p>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { MdOutlineMoneyOff } from "react-icons/md";
+import { BsArrowDownLeft } from "react-icons/bs";
 
 interface SaidasData {
   valor: string;
@@ -70,23 +71,20 @@ const SaidasContainer: React.FC = () => {
   }, []); // O array de dependências vazio faz com que o fetch seja executado apenas uma vez
 
   return (
-    <div className="rounded-lg bg-red-50 p-6 shadow-md">
-      <h2 className="mb-4 mt-4 flex items-center justify-start space-x-2 text-lg font-bold">
-        <MdOutlineMoneyOff size={45} className="text-red-500" /> {/* Ícone */}
-        <span className="text-red-500">Saídas</span> {/* Texto */}
+    <div className="relative rounded-lg bg-white p-6 shadow-lg">
+      <h2 className="mb-4 flex items-center text-base font-semibold text-gray-700">
+        <BsArrowDownLeft size={30} className="text-red-500" />
+        <span className="ml-2">Saídas</span>
       </h2>
-      <div className="flex flex-col items-center justify-center space-y-4">
+      <div className="text-center">
         {error ? (
-          <p className="text-red-500">{error}</p>
+          <p className="text-sm text-red-500">{error}</p>
         ) : saidas !== null ? (
-          <p className="flex items-center text-2xl font-semibold text-red-600">
-            <span>R$</span>
-            <span>
-              {saidas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </span>
+          <p className="text-2xl font-bold text-red-600">
+            R$ {saidas.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         ) : (
-          <p className="text-gray-500">Carregando...</p>
+          <p className="text-sm text-gray-400">Carregando...</p>
         )}
       </div>
     </div>

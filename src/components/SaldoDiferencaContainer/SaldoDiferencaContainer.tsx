@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { GrMoney } from "react-icons/gr";
+import { SlWallet } from "react-icons/sl";
+import { BsArrowUpRight } from "react-icons/bs";
+import { BsArrowDownLeft } from "react-icons/bs";
 
 interface EntradasSaidasData {
   valor: string;
@@ -77,32 +79,29 @@ const SaldoDiferencaContainer: React.FC = () => {
   }, []);
 
   return (
-    <div className="rounded-lg bg-blue-50 p-6 shadow-md">
-      <h2 className="mb-4 mt-4 flex items-center justify-start space-x-2 text-lg font-bold">
-        <GrMoney size={45} className="text-blue-500" /> {/* Ícone */}
-        <span className="text-blue-500">Saldo Atual</span>
+    <div className="relative rounded-lg bg-white p-6 shadow-lg">
+      <h2 className="mb-3 flex items-center text-base font-semibold text-gray-700">
+        <SlWallet size={30} className="text-blue-500" />
+        <span className="ml-2">Saldo Atual</span>
       </h2>
-      <div className="flex flex-col items-center justify-center space-y-4">
+      <div className="text-center">
         {error ? (
-          <p className="text-red-500">{error}</p>
+          <p className="text-sm text-red-500">{error}</p>
         ) : diferenca !== null ? (
-          <p className="flex items-center text-2xl font-semibold text-blue-600">
-            <span>R$</span>
-            <span>
-              {diferenca.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </span>
+          <p className="text-2xl font-bold text-blue-600">
+            R$ {diferenca.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </p>
         ) : (
-          <p className="text-gray-500">Carregando...</p>
+          <p className="text-sm text-gray-400">Carregando...</p>
         )}
       </div>
-      <div className="mt-6 flex justify-between text-sm text-gray-700">
+      <div className="mt-4 flex justify-between text-sm text-gray-700">
         <span className="text-green-500">
-          Entradas: R${" "}
-          {entradas?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+          <BsArrowUpRight size={20} />
+          R$ {entradas?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
         </span>
         <span className="text-red-500">
-          Saídas: R${" "}
+          <BsArrowDownLeft size={20} /> R${" "}
           {saidas?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
         </span>
       </div>

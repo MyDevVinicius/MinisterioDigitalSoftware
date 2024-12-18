@@ -62,7 +62,7 @@ export default async function handler(
     if (cliente.status !== "ativo") {
       console.warn(`Cliente bloqueado. Status: ${cliente.status}`);
       return res.status(403).json({
-        error: `O cliente está inativo. Acesso bloqueado. Status atual: ${cliente.status}`,
+        error: `O cliente está Bloqueado. Entre em contato com suporte !`,
       });
     }
 
