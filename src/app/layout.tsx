@@ -18,7 +18,7 @@ export default function RootLayout({
   }, []);
 
   return (
-    <html lang="en">
+    <html lang="pt-br">
       <body suppressHydrationWarning={true}>
         <div className="bg-white">{loading ? <Loader /> : children}</div>
       </body>

@@ -184,7 +184,7 @@ const LoginPage = () => {
           <div className="mb-4 flex justify-center">
             <Image src="/logosoft.png" alt="Logo" width={320} height={100} />
           </div>
-          <p className="text-center font-bold text-red-500">Area Restrita </p>
+
           <div className="mt-4">
             <label className="mb-2 block text-sm font-bold text-media">
               Adicione o código de Verificação

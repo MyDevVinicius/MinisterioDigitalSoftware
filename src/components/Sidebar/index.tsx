@@ -67,7 +67,7 @@ const menuGroups = [
                 fill-opacity="1"
                 data-original-color="#000000ff"
                 stroke="none"
-                stroke-opacity="1"
+                strokeOpacity="1"
               />
             </g>
           </svg>
@@ -197,7 +197,7 @@ const menuGroups = [
                 fill-opacity="1"
                 data-original-color="#000000ff"
                 stroke="none"
-                stroke-opacity="1"
+                strokeOpacity="1"
               />
               <path
                 d="M3,13H17.086l-4.3,4.3L14.2,18.718l4.949-4.95a2.5,2.5,0,0,0,0-3.536L14.2,5.282,12.783,6.7l4.3,4.3H3Z"
@@ -205,7 +205,7 @@ const menuGroups = [
                 fill-opacity="1"
                 data-original-color="#000000ff"
                 stroke="none"
-                stroke-opacity="1"
+                strokeOpacity="1"
               />
             </g>
           </svg>

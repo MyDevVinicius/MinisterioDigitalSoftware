@@ -73,7 +73,7 @@ const EntradasContainer: React.FC = () => {
   }, []); // O array de dependências vazio faz com que o fetch seja executado apenas uma vez
 
   return (
-    <div className="relative rounded-lg bg-white p-6 shadow-lg">
+    <div className="relative rounded-lg bg-white p-6 shadow-[0px_4px_6px_rgba(0,0,0,0.1),0px_-4px_6px_rgba(0,0,0,0.1)]">
       <h2 className="mb-4 flex items-center text-base font-semibold text-gray-700">
         <BsArrowUpRight size={30} className="text-green-500" />
         <span className="ml-2">Entradas</span>

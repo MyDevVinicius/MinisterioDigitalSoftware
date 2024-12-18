@@ -79,7 +79,7 @@ const SaldoDiferencaContainer: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative rounded-lg bg-white p-6 shadow-lg">
+    <div className="relative rounded-lg bg-white p-6 shadow-[0px_4px_6px_rgba(0,0,0,0.1),0px_-4px_6px_rgba(0,0,0,0.1)]">
       <h2 className="mb-3 flex items-center text-base font-semibold text-gray-700">
         <SlWallet size={30} className="text-blue-500" />
         <span className="ml-2">Saldo Atual</span>

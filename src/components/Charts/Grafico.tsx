@@ -8,12 +8,11 @@ import {
   Tooltip,
   Legend,
   BarElement,
-} from "chart.js"; // Importando os módulos necessários
+} from "chart.js";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { pt } from "date-fns/locale";
 
-// Registrar os módulos necessários
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -37,11 +36,9 @@ const GraficoEntradasSaidas = ({ altura }: { altura: string | number }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Recuperar nome do banco e chave de verificação do localStorage
   const nomeBanco = localStorage.getItem("nome_banco");
   const chave = localStorage.getItem("codigo_verificacao");
 
-  // Recupera as últimas datas do localStorage, se existirem
   useEffect(() => {
     const savedDataInicial = localStorage.getItem("data_inicial");
     const savedDataFinal = localStorage.getItem("data_final");
@@ -113,7 +110,6 @@ const GraficoEntradasSaidas = ({ altura }: { altura: string | number }) => {
     }
   }, [dataInicial, dataFinal]);
 
-  // Salvar as datas no localStorage sempre que elas forem alteradas
   useEffect(() => {
     if (dataInicial && dataFinal) {
       localStorage.setItem("data_inicial", dataInicial.toISOString());
@@ -121,7 +117,6 @@ const GraficoEntradasSaidas = ({ altura }: { altura: string | number }) => {
     }
   }, [dataInicial, dataFinal]);
 
-  // Formatar as datas para exibição no eixo X
   const formatarDatas = (data: string) => {
     const dataObj = new Date(data);
     return dataObj.toLocaleDateString("pt-BR", {
@@ -156,13 +151,13 @@ const GraficoEntradasSaidas = ({ altura }: { altura: string | number }) => {
 
   const options = {
     responsive: true,
-    maintainAspectRatio: false, // Permite ao gráfico preencher toda a largura disponível
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top" as const,
         labels: {
-          boxWidth: 12, // Tamanho menor da caixa de legenda
-          padding: 15, // Distância entre o texto da legenda e o ícone
+          boxWidth: 12,
+          padding: 15,
         },
       },
       tooltip: {
@@ -180,12 +175,11 @@ const GraficoEntradasSaidas = ({ altura }: { altura: string | number }) => {
         type: "category",
         ticks: {
           autoSkip: true,
-          maxTicksLimit: 10, // Limitar o número de ticks no eixo X
+          maxTicksLimit: 10,
         },
         grid: {
-          display: false, // Esconde as linhas de grade do eixo X
+          display: false,
         },
-        // Garantir que o gráfico ocupe toda a largura, mesmo se não houver dados para todas as datas
         offset: true,
       },
       y: {
@@ -194,7 +188,7 @@ const GraficoEntradasSaidas = ({ altura }: { altura: string | number }) => {
           text: "Valores (R$)",
         },
         grid: {
-          display: true, // Exibe as linhas de grade do eixo Y
+          display: true,
         },
         ticks: {
           beginAtZero: true,
@@ -204,12 +198,18 @@ const GraficoEntradasSaidas = ({ altura }: { altura: string | number }) => {
   };
 
   return (
-    <div className="overflow-x-auto rounded-lg bg-white p-6 shadow-lg">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-700">
+    <div
+      className="mt-4 overflow-x-auto rounded-lg bg-white p-4 shadow-lg"
+      style={{
+        boxShadow:
+          "0 -4px 6px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      <div className="mb-4">
+        <h2 className="text-center text-lg font-semibold text-gray-700 sm:text-left">
           Gráfico de Entradas e Saídas
         </h2>
-        <div className="flex items-center space-x-4">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm text-gray-500">
               Data Inicial:
@@ -217,9 +217,9 @@ const GraficoEntradasSaidas = ({ altura }: { altura: string | number }) => {
             <DatePicker
               selected={dataInicial}
               onChange={(date) => setDataInicial(date)}
-              className="rounded-lg border p-2"
+              className="w-full rounded-lg border p-2"
               dateFormat="yyyy-MM-dd"
-              locale={pt} // Localização em português
+              locale={pt}
             />
           </div>
           <div>
@@ -229,16 +229,16 @@ const GraficoEntradasSaidas = ({ altura }: { altura: string | number }) => {
             <DatePicker
               selected={dataFinal}
               onChange={(date) => setDataFinal(date)}
-              className="rounded-lg border p-2"
+              className="w-full rounded-lg border p-2"
               dateFormat="yyyy-MM-dd"
-              locale={pt} // Localização em português
+              locale={pt}
             />
           </div>
         </div>
       </div>
       {error && <p className="text-sm text-red-500">{error}</p>}
       {entradas && saidas && (
-        <div style={{ width: "100%", height: altura }}>
+        <div className="h-auto w-full" style={{ height: altura }}>
           <Bar data={data} options={options} />
         </div>
       )}

@@ -88,7 +88,7 @@ const ContasAPagarList: React.FC = () => {
   });
 
   return (
-    <div className="mx-auto w-full max-w-full space-y-4 p-4">
+    <div className="mx-auto mt-4 w-full max-w-full space-y-4 rounded-lg p-4 shadow-[0px_4px_6px_rgba(0,0,0,0.1),0px_-4px_6px_rgba(0,0,0,0.1)]">
       <ToastContainer />
       <h1 className="text-[1.4rem] font-bold text-gray-700">
         Resumo de Contas{" "}
@@ -120,8 +120,8 @@ const ContasAPagarList: React.FC = () => {
         />
       </div>
 
-      <table className="mt-4 w-full table-auto border-collapse text-gray-700">
-        <thead>
+      <table className="mt-4 w-full table-auto border-collapse overflow-hidden rounded-lg text-gray-700">
+        <thead className="rounded-t-lg bg-gray-100">
           <tr>
             <th className="border p-2 text-left">Observação</th>
             <th className="border p-2 text-center">Valor</th>
